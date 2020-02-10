@@ -1,0 +1,308 @@
+#start stop kmsglog_boot & logcat_boot after system mounted.
+#on late-fs
+#    trigger bootlog
+
+#stop kmsglog_boot & logcat_boot after boot completed.
+#on property:sys.boot_completed=1
+#    stop logcat_boot
+#    stop kmsg_boot
+
+#service for logcat_boot
+service logcat_boot /system/bin/wtlogcat -v threadtime  -r 2048  -z 6 -n 2 -f /cache/wt_logs/logcat-boot
+    class late_start
+    user system
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service kmsg_boot /sbin/logkmsg -r 2048 -z 4 -n 2 -f /cache/wt_logs/kmsg-boot
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:logkmsg:s0
+
+#service for logcat 8M
+service applogcat /system/bin/wtlogcat -v threadtime  -r 8192  -z 10 -n 10 -f /data/log/wt_logs/logcat-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service radiologcat /system/bin/wtlogcat -v threadtime  -b radio -r 8192  -z 10 -n 10 -f /data/log/wt_logs/logcat-radio-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service eventlogcat /system/bin/wtlogcat -v threadtime  -b events -r 8192  -z 10 -n 10 -f /data/log/wt_logs/logcat-event-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service kmsglogcat /sbin/logkmsg -r 8192 -z 10 -n 10 -f /data/log/wt_logs/logcat-kmsg-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:logkmsg:s0
+
+#service for logcat 12M
+service applogcat_12m /system/bin/wtlogcat -v threadtime  -r 12288 -z 10 -n 10 -f /data/log/wt_logs/logcat-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service radiologcat_12m /system/bin/wtlogcat -v threadtime  -b radio -r 12288 -z 10 -n 10 -f /data/log/wt_logs/logcat-radio-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service eventlogcat_12m /system/bin/wtlogcat -v threadtime  -b events -r 12288 -z 10 -n 10 -f /data/log/wt_logs/logcat-event-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service kmsglogcat_12m /sbin/logkmsg -r 12288 -z 10 -n 10 -f /data/log/wt_logs/logcat-kmsg-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:logkmsg:s0
+
+#service for logcat 16M
+service applogcat_16m /system/bin/wtlogcat -v threadtime  -r 16384 -z 10 -n 10 -f /data/log/wt_logs/logcat-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service radiologcat_16m /system/bin/wtlogcat -v threadtime  -b radio -r 16384 -z 10 -n 10 -f /data/log/wt_logs/logcat-radio-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service eventlogcat_16m /system/bin/wtlogcat -v threadtime  -b events -r 16384 -z 10 -n 10 -f /data/log/wt_logs/logcat-event-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:wtlogcat:s0
+
+service kmsglogcat_16m /sbin/logkmsg -r 16384 -z 10 -n 10 -f /data/log/wt_logs/logcat-kmsg-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:logkmsg:s0
+
+#service for  logcat-kmsg-log in charge mode
+service kmsglog_chg /sbin/logkmsg -r 2048 -z 10 -n 2 -f /cache/charger_logs/logcat-kmsg-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:logkmsg:s0
+
+#service for inputlog
+service wt_inputlog /system/bin/inputlog -r  8192  -n 10 -z 10 -f /data/log/wt_logs/input-log
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:inputlog:s0
+
+
+#trigger for logcat encrypt version
+on property:persist.sys.wtlog.enable=true && property:persist.sys.wtlog.size=0
+#&& property:vold.decrypt=trigger_restart_framework
+    stop kmsg_boot
+    start applogcat
+    start radiologcat
+    start eventlogcat
+    start kmsglogcat
+
+on property:persist.sys.wtlog.enable=true && property:persist.sys.wtlog.size=1
+#&& property:vold.decrypt=trigger_restart_framework
+    stop kmsg_boot
+    start applogcat_12m
+    start radiologcat_12m
+    start eventlogcat_12m
+    start kmsglogcat_12m
+
+on property:persist.sys.wtlog.enable=true && property:persist.sys.wtlog.size=2
+#&& property:vold.decrypt=trigger_restart_framework
+    stop kmsg_boot
+    start applogcat_16m
+    start radiologcat_16m
+    start eventlogcat_16m
+    start kmsglogcat_16m
+
+on property:persist.sys.wtlog.enable=false && property:persist.sys.wtlog.size=0
+    stop applogcat
+    stop radiologcat
+    stop eventlogcat
+    stop kmsglogcat
+
+on property:persist.sys.wtlog.enable=false && property:persist.sys.wtlog.size=1
+    stop applogcat_12m
+    stop radiologcat_12m
+    stop eventlogcat_12m
+    stop kmsglogcat_12m
+
+on property:persist.sys.wtlog.enable=false && property:persist.sys.wtlog.size=2
+    stop applogcat_16m
+    stop radiologcat_16m
+    stop eventlogcat_16m
+    stop kmsglogcat_16m
+
+#trigger stop kmsglog_boot & logcat_boot after system mounted.
+on bootlog
+    wait /dev/block/bootdevice/by-name/cache
+    start logcat_boot
+    start kmsg_boot
+
+#trigger for  logcat-kmsg-log in charge mode
+on charger
+    wait /dev/block/bootdevice/by-name/cache
+    mount ext4 /dev/block/bootdevice/by-name/cache /cache nosuid nodev barrier=1
+    setprop persist.sys.charger.wtlog true
+    
+on property:persist.sys.charger.wtlog=true
+    start kmsglog_chg
+
+on property:persist.sys.charger.wtlog=false
+    stop kmsglog_chg
+
+#trigger for inputlog
+on property:persist.sys.wtlog.enable=true
+#&& property:vold.decrypt=trigger_restart_framework
+    start wt_inputlog
+
+on property:persist.sys.wtlog.enable=false
+    stop wt_inputlog
+
+
+#services for mdlog
+service mdlog_50_10 /system/bin/diag_mdlog_system -s 50 -n 10
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_50_20 /system/bin/diag_mdlog_system -s 50 -n 20
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_50_50 /system/bin/diag_mdlog_system -s 50 -n 50
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_100_10 /system/bin/diag_mdlog_system -s 100 -n 10
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_100_20 /system/bin/diag_mdlog_system -s 100 -n 20
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_100_50 /system/bin/diag_mdlog_system -s 100 -n 50
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_200_10 /system/bin/diag_mdlog_system -s 200 -n 10 
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_200_20 /system/bin/diag_mdlog_system -s 200 -n 20
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_200_50 /system/bin/diag_mdlog_system -s 200 -n 50
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_stop /system/bin/diag_mdlog_system -k
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+#triggers for encrypt version
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=0 && property:persist.sys.qxdm_log.number=0
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_50_10
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=0 && property:persist.sys.qxdm_log.number=1
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_50_20
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=0 && property:persist.sys.qxdm_log.number=2
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_50_50
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=1 && property:persist.sys.qxdm_log.number=0
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_100_10
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=1 && property:persist.sys.qxdm_log.number=1
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_100_20
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=1 && property:persist.sys.qxdm_log.number=2
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_100_50
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=2 && property:persist.sys.qxdm_log.number=0
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_200_10
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=2 && property:persist.sys.qxdm_log.number=1
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_200_20
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=2 && property:persist.sys.qxdm_log.number=2
+#&& property:vold.decrypt=trigger_restart_framework
+    start mdlog_200_50
+
+on property:persist.sys.qxdm_log.enable=false
+    start mdlog_stop
