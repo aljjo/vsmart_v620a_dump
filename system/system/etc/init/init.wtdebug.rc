@@ -1,0 +1,65 @@
+#make dirs
+on post-fs-data
+    mkdir /data/log/ 0775 system system
+    mkdir /data/log/wt_logs 0775 system system
+    mkdir /data/log/binder 0775 system system
+    mkdir /data/log/configs 0775 system system
+    mkdir /data/log/tcp_logs 0775 system system
+
+    mkdir /data/vendor/diag_logs 0775 system system
+
+    mkdir /cache/charger_logs/ 0775 system system
+    mkdir /cache/wt_logs 0775 system system
+
+    chmod 0664 /cache/recovery/log
+    chmod 0664 /cache/recovery/last_kmsg
+    chmod 0664 /cache/recovery/last_log
+    chmod 0664 /cache/recovery/last_install
+    chmod 0664 /cache/recovery/last_locale
+
+#wtbugreport
+service wtbugreport /system/bin/dumpstate -d -B -P -z \
+        -o /data/user_de/0/com.android.shell/files/bugreports/bugreport
+    class main
+    disabled
+    oneshot
+
+#triggers for tcpdump log
+service wttcpdump /system/bin/tcpdump -i any -p -s 0 -w /data/log/tcp_logs/capture_tcpdump.pcap
+    class late_start
+    user root
+    group system
+    disabled
+    seclabel u:r:tcpdump:s0
+
+#service for tcpdump  log
+service catch_tcplog /system/bin/sh /system/etc/capture_tcpdump.sh
+   class late_start
+   user root
+   group system
+   disabled
+   seclabel u:r:wtlogcat:s0
+
+on property:persist.sys.tcpdump.enable=true
+    start wttcpdump
+    start catch_tcplog
+
+on property:persist.sys.tcpdump.enable=false
+    stop wttcpdump
+    stop catch_tcplog
+
+#cnss_diag begin
+service vendor.cnss_diag /vendor/bin/cnss_diag -s -f -t HELIUM
+    class late_start
+    user system
+    group system wifi inet diag log
+    capabilities NET_ADMIN
+    disabled
+    oneshot
+
+on property:persist.sys.cnss_diag.enable=true
+    start vendor.cnss_diag
+
+on property:persist.sys.cnss_diag.enable=false
+    stop vendor.cnss_diag
+#cnss_diag end
