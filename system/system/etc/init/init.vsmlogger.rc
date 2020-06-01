@@ -1,0 +1,181 @@
+on post-fs-data
+    mkdir /data/log/ 0775 system system
+    mkdir /data/log/vsm_logs 0775 system system
+    mkdir /data/log/tcp_logs 0775 system system
+
+    mkdir /data/log/auto_logs 0775 system log
+    chown system log /data/log/auto_logs
+    chmod 0775 /data/log/auto_logs
+
+service vsmloggerd /system/bin/vsmloggerd
+    class late_start
+    user system
+    group system log
+    oneshot
+
+on property:init.svc.zygote=restarting
+    restart vsmloggerd
+
+service vsmtcpdump /system/bin/tcpdump -i any -p -s 0 -w /data/log/tcp_logs/capture_tcpdump.pcap
+    class late_start
+    user root
+    group system
+    disabled
+    oneshot
+    seclabel u:r:tcpdump:s0
+
+service catch_tcplog /system/bin/sh /system/etc/capture_tcpdump.sh
+   class late_start
+   user root
+   group system
+   disabled
+   oneshot
+   seclabel u:r:vsmlog:s0
+
+on property:persist.sys.tcpdump.enable=true
+    start vsmtcpdump
+    start catch_tcplog
+
+on property:persist.sys.tcpdump.enable=false
+    stop vsmtcpdump
+    stop catch_tcplog
+
+#cnss_diag begin
+service vendor.cnss_diag /vendor/bin/cnss_diag -s -f
+    class late_start
+    user system
+    group system wifi inet diag log
+    capabilities NET_ADMIN
+    disabled
+    oneshot
+
+on property:persist.sys.cnss_diag.enable=true
+    start vendor.cnss_diag
+
+on property:persist.sys.cnss_diag.enable=false
+    stop vendor.cnss_diag
+#cnss_diag end
+
+service vsmlog /system/bin/vsmlog
+    class late_start
+    user root
+    group system
+    disabled
+    oneshot
+    seclabel u:r:vsmlog:s0
+
+service vsmkmsg /sbin/vsmkmsg -r 16384 -z 10 -n 10 -f /data/log/vsm_logs/vsmkmsg.log
+    class late_start
+    user root
+    group system
+    disabled
+    oneshot
+    seclabel u:r:vsmkmsg:s0
+
+on property:persist.sys.vsmlogger.enable=true
+    start vsmlog
+    start vsmkmsg
+
+on property:persist.sys.vsmlogger.enable=false
+    stop vsmlog
+    stop vsmkmsg
+
+service mdlog_50_10 /system/bin/diag_mdlog_system -s 50 -n 10
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_50_20 /system/bin/diag_mdlog_system -s 50 -n 20
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_50_50 /system/bin/diag_mdlog_system -s 50 -n 50
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_100_10 /system/bin/diag_mdlog_system -s 100 -n 10
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_100_20 /system/bin/diag_mdlog_system -s 100 -n 20
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_100_50 /system/bin/diag_mdlog_system -s 100 -n 50
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_200_10 /system/bin/diag_mdlog_system -s 200 -n 10 
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_200_20 /system/bin/diag_mdlog_system -s 200 -n 20
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_200_50 /system/bin/diag_mdlog_system -s 200 -n 50
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+service mdlog_stop /system/bin/diag_mdlog_system -k
+    class late_start
+    user shell
+    group system oem_2901 sdcard_rw sdcard_r media_rw
+    disabled
+    oneshot
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=0 && property:persist.sys.qxdm_log.number=0
+    start mdlog_50_10
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=0 && property:persist.sys.qxdm_log.number=1
+    start mdlog_50_20
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=0 && property:persist.sys.qxdm_log.number=2
+    start mdlog_50_50
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=1 && property:persist.sys.qxdm_log.number=0
+    start mdlog_100_10
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=1 && property:persist.sys.qxdm_log.number=1
+    start mdlog_100_20
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=1 && property:persist.sys.qxdm_log.number=2
+    start mdlog_100_50
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=2 && property:persist.sys.qxdm_log.number=0
+    start mdlog_200_10
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=2 && property:persist.sys.qxdm_log.number=1
+    start mdlog_200_20
+
+on property:persist.sys.qxdm_log.enable=true && property:persist.sys.qxdm_log.size=2 && property:persist.sys.qxdm_log.number=2
+    start mdlog_200_50
+
+on property:persist.sys.qxdm_log.enable=false
+    start mdlog_stop
